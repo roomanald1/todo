@@ -25,7 +25,7 @@ pub struct CommandInfo<'a> {
 
 
 pub enum CommandResult{
-    Success,
+    Success(String),
     Failure(String),
     Exit
 }
@@ -55,7 +55,6 @@ impl Command {
         }
     }
 
-    // Map command descriptions to keys
     pub fn command_info() -> Vec<CommandInfo<'static>> {
         vec![
             CommandInfo {
@@ -93,7 +92,7 @@ impl Command {
                 description: "Save state",
                 handler: Box::new(|state, _| {
                     perform_save(state);
-                    CommandResult::Success
+                    CommandResult::Success(String::from("State saved successfully!"))
                 })
             },
             CommandInfo {
@@ -104,23 +103,21 @@ impl Command {
                     for x in commands::Command::command_info() {
                         println!("-> \t[{}]\t\t\t{}", &x.keys.join(","),  String::from(x.description));
                     }
-                    CommandResult::Success
+                    CommandResult::Success(String::from("Available Commands:"))
                 })
             },
             CommandInfo {
                 keys: vec!["done", "d"],
                 description: "Mark as done",
                 handler: Box::new(|state, value| {
-                    perform_done_toggle(state, value, true);
-                    CommandResult::Success
+                    perform_done_toggle(state, value, true)
                 })
             },
             CommandInfo {
                 keys: vec!["open", "o"],
                 description: "Mark as Open",
                 handler: Box::new(|state, value| {
-                    perform_done_toggle(state, value, false);
-                    CommandResult::Success
+                    perform_done_toggle(state, value, false)
                 })
             }
         ]

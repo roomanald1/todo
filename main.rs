@@ -97,7 +97,7 @@ fn handle_command(state: Arc<Mutex<State>>) {
 
         let mut state = state.lock().unwrap();
         let should_continue = match commands::Command::execute(&mut state, &input) {
-            CommandResult::Success => true,
+            CommandResult::Success(_) => true,
             CommandResult::Failure(x) => {
                 println!("Error: {}", x);
                 true

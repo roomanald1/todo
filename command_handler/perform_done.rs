@@ -13,6 +13,6 @@ pub(crate) fn perform_done_toggle(state: &mut types::State, item: String, done: 
         }
     }).collect::<Vec<types::TODO>>();
     state.items = transformed;
-    Success
+    Success(format!("Task with ID={} updated successfully.",item))
 }
 

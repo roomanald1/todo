@@ -6,7 +6,7 @@ use crate::types::TODO;
 pub(crate) fn perform_list_console(state: &types::State, open :Option<bool>) -> commands::CommandResult{
     let table = perform_list(state, open);
     println!("{}", table);
-    commands::CommandResult::Success
+    commands::CommandResult::Success(String::from("Listed all tasks"))
 }
 
 

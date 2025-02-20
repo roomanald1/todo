@@ -1,1 +1,1 @@
-{"items":[{"description":"Push to Git","added_on":"2025-02-20 07:55:43.764691 UTC","completed":false,"id":1}]}
+{"items":[{"description":"Push to Git","added_on":"2025-02-20 07:55:43.764691 UTC","completed":true,"id":1},{"description":"Way to update an Item","added_on":"2025-02-20 10:29:59.997090 UTC","completed":false,"id":2},{"description":"Way to clear all items","added_on":"2025-02-20 10:30:13.741984 UTC","completed":false,"id":3},{"description":"Return Result message with TaskID and success/fail","added_on":"2025-02-20 10:30:38.942029 UTC","completed":false,"id":4}]}
