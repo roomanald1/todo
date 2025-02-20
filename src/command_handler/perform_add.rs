@@ -4,7 +4,7 @@ use chrono::Utc;
 use crate::command_handler::commands;
 
 pub(crate) fn perform_add(state: &mut types::State, item: String) -> commands::CommandResult {
-    let id =  (state.items.len() as u32) + 1;
+    let id =  state.items.iter().map(|x| x.id.clone()).max().unwrap_or(0) + 1;
     state.items.push(types::TODO {
         id,
         description: item,
