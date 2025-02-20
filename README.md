@@ -40,6 +40,51 @@ cargo run
 
 ---
 
+## Command-Line Interface (CLI)
+
+The TODO app includes a **Command-Line Interface (CLI)** for managing tasks interactively.
+
+### Usage
+Run the app and use the following commands to manage tasks:
+
+| **Command**               | **Description**                                                              | **Example**                           |
+|---------------------------|------------------------------------------------------------------------------|---------------------------------------|
+| `add <title> [desc]`      | Add a new TODO task with a title and optional description.                   | `add "Learn Rust" "Read book chapters"` |
+| `list`                    | Display all existing tasks in a nicely formatted table.                     | `list`                                |
+| `update <id> [title] [desc] [status]` | Update the title, description, or status (completed/incomplete) of a task by ID. | `update 1 "Learn Rust Better" "More practice" true` |
+| `delete <id>`             | Delete a task by its ID.                                                    | `delete 1`                            |
+| `clear`                   | Deletes all tasks from the list.                                            | `clear`                               |
+| `help`                    | Show help information about available commands.                             | `help`                                |
+
+### Example Session
+
+```bash
+$ cargo run
+Welcome to the TODO App! Type 'help' for a list of commands.
+
+> add "Learn Rust" "Complete Rust book chapters 5-8"
+Task added successfully: ID=1, Title="Learn Rust"
+
+> list
++----+------------+-----------------------------+-----------+---------------------+
+| ID | Title      | Description                 | Completed | Created At          |
++----+------------+-----------------------------+-----------+---------------------+
+| 1  | Learn Rust | Complete Rust book chapters | false     | 2023-10-10 12:30:00 |
++----+------------+-----------------------------+-----------+---------------------+
+
+> update 1 "Learn Rust Better" "Practice Rust examples" true
+Task with ID=1 updated successfully.
+
+> delete 1
+Task with ID=1 deleted successfully.
+
+> clear
+All tasks have been cleared!
+```
+---
+
+
+---
 ## HTTP API Endpoints
 
 The app provides a RESTful API interface to manage tasks.
