@@ -37,7 +37,6 @@ async fn main(){
         .route("/", get(|| async { "Hello, World!" }))
         .route("/api/items", get({
             let shared_state = Arc::clone(&http_state);
-            // Return a closure that Axum can use as a handler
             move || {
                 let shared_state = Arc::clone(&shared_state);
                 async move { items_handler(shared_state).await }
@@ -63,15 +62,13 @@ async fn main(){
             println!("Type 'h' for help");
 
             spawn_blocking(move || {
-                handle_command(shared_state); // Pass mutable state to the REPL function
+                handle_command(shared_state);
             })
                 .await
                 .unwrap();
         }
     });
 
-
-    //Wait until command is handled
     command_handle.await.unwrap();
 
     println!("Telling Server to shutdown");
@@ -86,16 +83,11 @@ async fn main(){
 
 async fn items_handler(shared_state: Arc<Mutex<State>>) -> impl IntoResponse
 {
-
-        let shared_state = Arc::clone(&shared_state); // Move the state into the handler
-
-            let state = shared_state.lock().unwrap(); // Lock the shared state
-            let items = state.items.clone(); // Clone the items
-            Json(items) // Return items as JSON
-
-
+    let shared_state = Arc::clone(&shared_state); // Move the state into the handler
+    let state = shared_state.lock().unwrap();
+    let items = state.items.clone();
+    Json(items)
 }
-
 
 fn handle_command(state: Arc<Mutex<State>>) {
     loop {
