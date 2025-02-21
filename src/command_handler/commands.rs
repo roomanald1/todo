@@ -2,7 +2,7 @@ use std::sync::Arc;
 use crate::command_handler::perform_add::perform_add;
 use crate::command_handler::perform_list::{perform_list, perform_list_console};
 use crate::command_handler::perform_remove::perform_remove;
-use crate::state_serde::perform_save;
+use crate::serialisation::perform_save;
 use crate::types;
 use crate::command_handler::commands;
 use crate::command_handler::perform_done::{ perform_done_toggle};
@@ -97,7 +97,7 @@ impl Command {
                 description: "Add a new item",
                 http_method: HttpMethod::Put,
                 http_path: "/api/items/add",
-                handler: Arc::new(|input, state, value| perform_add(state, value))
+                handler: Arc::new(|_, state, value| perform_add(state, value))
             },
             CommandInfo {
                 keys: vec!["l", "list", "ls"],
@@ -158,7 +158,7 @@ impl Command {
                 description: "Remove an item",
                 http_path: "/api/items/remove/{id}",
                 http_method: HttpMethod::Delete,
-                handler: Arc::new(|input, state, value| perform_remove(state, value))
+                handler: Arc::new(|_, state, value| perform_remove(state, value))
             },
             CommandInfo {
                 keys: vec!["x", "exit", "q", "quit"],
@@ -172,7 +172,7 @@ impl Command {
                 description: "Save state",
                 http_path: "/api/save",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(|input, state, _| {
+                handler: Arc::new(|_, state, _| {
                     perform_save(state);
                     CommandResult::Success(String::from("State saved successfully!"))
                 })
@@ -195,7 +195,7 @@ impl Command {
                 description: "Mark as done",
                 http_path: "/api/items/{id}/done",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(|input, state, value| {
+                handler: Arc::new(|_, state, value| {
                     perform_done_toggle(state, value, true)
                 })
             },
@@ -204,7 +204,7 @@ impl Command {
                 description: "Mark as Open",
                 http_path: "/api/items/{id}/open",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(|input, state, value| {
+                handler: Arc::new(|_, state, value| {
                     perform_done_toggle(state, value, false)
                 })
             }
