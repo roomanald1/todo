@@ -5,7 +5,8 @@ pub(crate) struct TODO {
     pub description: String,
     pub added_on: String,
     pub completed: bool,
-    pub id: u32
+    pub id: Option<u64>,
+    pub user_id: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
