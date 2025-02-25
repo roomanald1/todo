@@ -135,7 +135,7 @@ pub async fn get_data(client: &Client, _: Option<bool>) -> Result<Vec<Todo>, Str
     // Verify by selecting rows from the table
     let result = client
         .query(
-            "SELECT id, user_id, description, added_on, completed FROM todo",
+            "SELECT id, user_id, description, added_on, completed FROM todo ORDER BY id ASC",
             &[],
         )
         .await;

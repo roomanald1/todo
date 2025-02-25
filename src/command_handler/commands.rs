@@ -2,7 +2,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio_postgres::Client;
 use crate::command_handler::perform_add::perform_add;
-use crate::command_handler::perform_list::{perform_list_console, perform_list_http};
+use crate::command_handler::perform_list::{perform_list_console, perform_list_http, ListMode};
 use crate::command_handler::perform_remove::perform_remove;
 use crate::command_handler::commands;
 use crate::command_handler::perform_done::perform_done_toggle;
@@ -113,7 +113,7 @@ impl Command {
             },
             CommandInfo {
                 keys: vec!["l", "list", "ls"],
-                description: "List all items",
+                description: "List open items",
                 http_path: "/api/items",
                 http_method: HttpMethod::Get,
                 handler: Arc::new(move |input, _, client| {
@@ -121,24 +121,24 @@ impl Command {
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(None, &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(None, &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Open, &connection).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::Open, &connection).await
                         }
                     }.boxed()
                 })
             },
             CommandInfo {
-                keys: vec!["l:open", "list:open", "ls:open"],
-                description: "List open items",
-                http_path: "/api/items/open",
+                keys: vec!["l:all", "list:all", "ls:all"],
+                description: "List all items",
+                http_path: "/api/items/all",
                 http_method: HttpMethod::Get,
                 handler: Arc::new(move |input, _, client| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(Some(true), &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(Some(true), &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::All, &connection).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::All, &connection).await
                         }
                     }.boxed()
                 })
@@ -153,8 +153,8 @@ impl Command {
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(Some(false), &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(Some(false), &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Done, &connection).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::Done, &connection).await
                         }
                     }.boxed()
                 })

@@ -6,8 +6,6 @@ mod command_handler;
 mod console_service;
 mod store;
 
-use crate::console_service::console_service::start_console;
-
 #[tokio::main]
 async fn main(){
 
@@ -19,12 +17,19 @@ async fn main(){
     println!("Starting WebService");
     let (close_tx, server_handle) = web_service::web_service::start_webservice(http_db).await;
 
-    println!("Starting Console");
-    start_console(db).await.expect("Console failed to start");
+    let use_console = match std::env::var("USE_CONSOLE") {
+        Ok(value) => value == "true",
+        Err(_) => true,
+    };
+    
+    if use_console {
+        println!("Starting Console");
+        console_service::console_service::start_console(db).await.expect("Console failed to start");
 
-    println!("Telling Server to shutdown");
-    _ = close_tx.send(());
+        println!("Telling Server to shutdown");
+        _ = close_tx.send(());
+    }
 
-    println!("Gracefully shutting down");
+    println!("Waiting for server to finish");
     _ = server_handle.await;
 }

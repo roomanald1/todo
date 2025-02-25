@@ -4,15 +4,21 @@ use crate::store::database;
 use crate::command_handler::commands;
 use crate::types::Todo;
 
-pub(crate) async fn perform_list_console(open :Option<bool>, client: &Client) -> commands::CommandResult{
-    match perform_list(open, client).await {
+
+pub enum ListMode {
+    All, 
+    Open, 
+    Done
+}
+pub(crate) async fn perform_list_console(mode :ListMode, client: &Client) -> commands::CommandResult{
+    match perform_list(mode, client).await {
         Ok(data) => commands::CommandResult::Success(as_table(data).to_string()),
         Err(e) => commands::CommandResult::Failure(e.to_string()) 
     }
 }
 
-pub(crate) async fn perform_list_http(open :Option<bool>, client: &Client) -> commands::CommandResult{
-    match perform_list(open, client).await{
+pub(crate) async fn perform_list_http(mode :ListMode, client: &Client) -> commands::CommandResult{
+    match perform_list(mode, client).await{
         Ok(result) =>  match serde_json::to_string(&result)
         {
             Ok(x) => commands::CommandResult::Success(x),
@@ -22,13 +28,13 @@ pub(crate) async fn perform_list_http(open :Option<bool>, client: &Client) -> co
     }
 }
 
-pub(crate) async fn perform_list(open :Option<bool>, client: &Client) -> Result<Vec< Todo>, String> {
+pub(crate) async fn perform_list(mode :ListMode, client: &Client) -> Result<Vec< Todo>, String> {
     match database::get_data(client, None).await {
             Ok(data) => Ok(data.into_iter().filter(|i| {
-                match open {
-                    Some(true) => !i.completed,
-                    Some(false) => i.completed,
-                    None => true,
+                match mode {
+                    ListMode::Open => !i.completed,
+                    ListMode::Done => i.completed,
+                    ListMode::All => true,
                 }
             }).collect()),
             Err(e) => Err(e.to_string())

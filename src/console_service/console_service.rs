@@ -1,7 +1,7 @@
 use std::io::stdin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tokio::task::{spawn_blocking, JoinHandle};
+use tokio::task::JoinHandle;
 use tokio_postgres::Client;
 use crate::command_handler::commands;
 use crate::command_handler::commands::{CommandInput, CommandResult};
