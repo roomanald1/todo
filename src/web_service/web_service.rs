@@ -60,7 +60,7 @@ pub async fn start_webservice(client: Arc<Mutex<Client>>) -> (Sender<()>, JoinHa
     }
 
 
-    let listener = match tokio::net::TcpListener::bind("127.0.0.1:3000").await {
+    let listener = match tokio::net::TcpListener::bind("0.0.0.0:3000").await {
         Ok(listener) => listener,
         Err(e) => panic!("Failed to bind listener: {}", e),//TODO handle this
     };
