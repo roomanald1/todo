@@ -1,3 +1,14 @@
 {
-    "codium.codeCompletion.enable": true
+    "codium.codeCompletion.enable": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 5,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "always"
+    },
+    "rust-analyzer.cargo.allFeatures": true,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "[rust]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    }
 }

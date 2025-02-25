@@ -1,20 +1,22 @@
 use std::io::stdin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::task::{spawn_blocking, JoinHandle};
 use tokio_postgres::Client;
 use crate::command_handler::commands;
 use crate::command_handler::commands::{CommandInput, CommandResult};
-use crate::types::State;
 
-fn handle_command(state: Arc<Mutex<State>>, client: Arc<Mutex<Client>>) {
+async fn handle_command(client: Arc<Mutex<Client>>) {
     loop {
         println!("\r\n> ");
         let mut input = String::new();
-        stdin().read_line(&mut input).unwrap();
-        let connection = client.lock().unwrap();
+        match stdin().read_line(&mut input){
+            Ok(_) => (),
+            Err(_) => break,
+        };
 
-        let mut state = state.lock().unwrap();
-        let should_continue = match commands::Command::execute(&mut state, CommandInput::CommandLine(input), &connection) {
+        let client = Arc::clone(&client);
+        let should_continue = match commands::Command::execute(CommandInput::CommandLine(input), client).await {
             CommandResult::Success(x) => {
                 print!("{}", x);
                 true
@@ -32,18 +34,12 @@ fn handle_command(state: Arc<Mutex<State>>, client: Arc<Mutex<Client>>) {
     }
 }
 
-pub fn start_console(shared_state :Arc<Mutex<State>>, client: Arc<Mutex<Client>>) -> JoinHandle<()> {
-    let handle = tokio::spawn({
-        let shared_state = Arc::clone(&shared_state);
-        let db = Arc::clone(&client);
+pub fn start_console(client: Arc<Mutex<Client>>) -> JoinHandle<()> {
+    tokio::spawn({
         async move {
             println!("Welcome to your TODO list");
             println!("Type 'h' for help");
-
-            spawn_blocking(move || {
-                handle_command(shared_state, db);
-            }).await.unwrap();
+            handle_command( client).await
         }
-    });
-    handle
+    })
 }

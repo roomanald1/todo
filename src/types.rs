@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub(crate) struct TODO {
+pub(crate) struct Todo {
     pub description: String,
     pub added_on: String,
     pub completed: bool,
@@ -11,5 +11,5 @@ pub(crate) struct TODO {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct State {
-    pub(crate) items : Vec<TODO>
+    pub(crate) items : Vec<Todo>
 }

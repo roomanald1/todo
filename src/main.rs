@@ -1,4 +1,5 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 mod types;
 mod web_service;
 mod command_handler;
@@ -6,25 +7,20 @@ mod console_service;
 mod store;
 
 use crate::console_service::console_service::start_console;
-use crate::types::State;
 
 #[tokio::main]
 async fn main(){
 
     println!("Starting Database");
-    let (items, client) = store::database::init().await;
-    let db = Arc::new(Mutex::new(client));
-    let state = State { items};
-
-    let shared_state = Arc::new(Mutex::new(state));
-    let http_state = Arc::clone(&shared_state);
+    let client = store::database::init().await;
+    let db: Arc<Mutex<tokio_postgres::Client>> = Arc::new(Mutex::new(client));
     let http_db = Arc::clone(&db);
 
     println!("Starting WebService");
-    let (close_tx, server_handle) = web_service::web_service::start_webservice(http_state, http_db).await;
+    let (close_tx, server_handle) = web_service::web_service::start_webservice(http_db).await;
 
     println!("Starting Console");
-    start_console(shared_state, db).await.expect("Console failed to start");
+    start_console(db).await.expect("Console failed to start");
 
     println!("Telling Server to shutdown");
     _ = close_tx.send(());

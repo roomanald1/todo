@@ -25,6 +25,8 @@ dead_code = "allow"
 [lints.clippy]
 # You forgot a `todo!()`!
 todo = "forbid"
+allow-unwrap-in-tests = "allow"
+unwrap_used = "forbid"
 # This can only happen by mistake in Rustlings.
 empty_loop = "forbid"
 # No infinite loops are needed in Rustlings.
