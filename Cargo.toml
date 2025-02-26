@@ -36,6 +36,10 @@ mem_forget = "deny"
 # Currently, there are no disallowed methods. This line avoids problems when developing Rustlings.
 disallowed_methods = "allow"
 
+[package.metadata.scripts]
+console = "MODE=console cargo run"
+web = "MODE=web cargo run"
+
 [dependencies]
 comfy-table = "7.1.4"
 serde = {  version = "1.0.217", features = ["derive"] }
@@ -49,6 +53,8 @@ postgres-native-tls = "0.5.1"
 native-tls = "0.2.14"
 log = "0.4.26"
 futures = "0.3.31"
+tower-http = { version = "0.6.2", features = ["cors"]}
+tower = "0.5.2"
 
 
 

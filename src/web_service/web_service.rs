@@ -4,9 +4,8 @@ use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::{Json, Router};
 use axum::routing::{delete, get, put};
-use tokio::sync::oneshot::Sender;
-use tokio::task::JoinHandle;
 use tokio_postgres::Client;
+use tower_http::cors::CorsLayer;
 use crate::command_handler::commands::{Command, CommandInfo, CommandInput, CommandResult, HttpMethod};
 
 async fn items_handler(
@@ -23,7 +22,7 @@ async fn items_handler(
     
 }
 
-pub async fn start_webservice(client: Arc<Mutex<Client>>) -> (Sender<()>, JoinHandle<()>){
+pub async fn start_webservice(client: Arc<Mutex<Client>>){
     let mut app = Router::new();
     for command in Command::command_info() {
         match command.http_method {
@@ -59,20 +58,15 @@ pub async fn start_webservice(client: Arc<Mutex<Client>>) -> (Sender<()>, JoinHa
         }
     }
 
+    app = app.layer(CorsLayer::permissive());
 
-    let listener = match tokio::net::TcpListener::bind("0.0.0.0:3000").await {
+    let address = "0.0.0.0:3000";
+    let listener = match tokio::net::TcpListener::bind(address).await {
         Ok(listener) => listener,
         Err(e) => panic!("Failed to bind listener: {}", e),//TODO handle this
     };
-    let (close_tx, close_rx) = tokio::sync::oneshot::channel();
 
-    let server_handle = tokio::spawn(async {
-        match axum::serve(listener, app).with_graceful_shutdown(async move {
-            _ = close_rx.await
-        }).await {
-            Ok(_) => println!("Server stopped"),
-            Err(e) => eprintln!("Server error: {}", e),
-        };
-    });
-    (close_tx, server_handle)
+    println!("Listening on {}", address);
+    axum::serve(listener, app).await.expect("Failed to start server");
+
 }
