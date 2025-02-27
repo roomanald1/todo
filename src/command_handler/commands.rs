@@ -107,7 +107,7 @@ impl Command {
                     let client = Arc::clone(&client);
                     async move{
                         let connection = client.lock().await;
-                        perform_add(value, &connection)
+                        perform_add(value, &connection).await
                     }.boxed()
                 })
             },
