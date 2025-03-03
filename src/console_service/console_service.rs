@@ -16,7 +16,7 @@ async fn handle_command(client: Arc<Mutex<Client>>) {
         };
 
         let client = Arc::clone(&client);
-        let should_continue = match commands::Command::execute(CommandInput::CommandLine(input), client, String::from("ronnie.day1@gmail.com")).await {
+        let should_continue = match commands::Command::execute(CommandInput::CommandLine(input), client, String::from("user_123")).await {
             CommandResult::Success(x) => {
                 print!("{}", x);
                 true
