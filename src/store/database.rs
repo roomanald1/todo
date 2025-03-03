@@ -75,8 +75,8 @@ async fn create_table_if_not_exists(client: &Client) -> Result<u64, Error> {
 }
 
 pub async fn remove_item(client: &Client, item: String, user: String) -> Result<u64, tokio_postgres::Error> {
-    let command = format!("DELETE FROM todo WHERE id = {} AND user_id = {}", item, user);
-    client.execute(&command, &[]).await
+    let command = "DELETE FROM todo WHERE id = $1 AND user_id = $2";
+    client.execute(command, &[&item.parse::<i64>().unwrap(),&user]).await
 }
 
 pub async fn upsert_item(client: &Client, item: Todo) -> Result<u64, String> {
