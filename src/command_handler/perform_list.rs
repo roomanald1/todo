@@ -10,15 +10,15 @@ pub enum ListMode {
     Open, 
     Done
 }
-pub(crate) async fn perform_list_console(mode :ListMode, client: &Client) -> commands::CommandResult{
-    match perform_list(mode, client).await {
+pub(crate) async fn perform_list_console(mode :ListMode, client: &Client, user: String) -> commands::CommandResult{
+    match perform_list(mode, client, user).await {
         Ok(data) => commands::CommandResult::Success(as_table(data).to_string()),
         Err(e) => commands::CommandResult::Failure(e.to_string()) 
     }
 }
 
-pub(crate) async fn perform_list_http(mode :ListMode, client: &Client) -> commands::CommandResult{
-    match perform_list(mode, client).await{
+pub(crate) async fn perform_list_http(mode :ListMode, client: &Client, user: String) -> commands::CommandResult{
+    match perform_list(mode, client, user).await{
         Ok(result) =>  match serde_json::to_string(&result)
         {
             Ok(x) => commands::CommandResult::Success(x),
@@ -28,8 +28,8 @@ pub(crate) async fn perform_list_http(mode :ListMode, client: &Client) -> comman
     }
 }
 
-pub(crate) async fn perform_list(mode :ListMode, client: &Client) -> Result<Vec< Todo>, String> {
-    match database::get_data(client, None).await {
+pub(crate) async fn perform_list(mode :ListMode, client: &Client, user: String) -> Result<Vec< Todo>, String> {
+    match database::get_data(client, None, user).await {
             Ok(data) => Ok(data.into_iter().filter(|i| {
                 match mode {
                     ListMode::Open => !i.completed,

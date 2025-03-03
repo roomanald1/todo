@@ -2,14 +2,13 @@ use crate::store::database;
 use crate::types;
 use crate::command_handler::commands::CommandResult;
 use chrono::Utc;
-use tokio::runtime::Runtime;
 use tokio_postgres::Client;
 use crate::command_handler::commands;
 
-pub(crate) async fn perform_add(description: String, client: &Client) -> commands::CommandResult {
+pub(crate) async fn perform_add(description: String, client: &Client, user: String) -> commands::CommandResult {
     let item = types::Todo {
         id: None,
-        user_id: String::from("user_123"),
+        user_id: user,
         description,
         added_on: Utc::now().to_string(),
         completed: false

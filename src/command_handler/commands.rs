@@ -20,7 +20,7 @@ pub enum Command {
     Exit
 }
 
-type CommandHandler = dyn Fn(Arc<CommandInput>, String, Arc<Mutex<Client>>) -> BoxFuture<'static, CommandResult> + Send + Sync;
+type CommandHandler = dyn Fn(Arc<CommandInput>, String, Arc<Mutex<Client>>, String) -> BoxFuture<'static, CommandResult> + Send + Sync;
 
 #[derive(Clone)]
 pub struct CommandInfo<'a> {
@@ -74,7 +74,7 @@ impl Command {
             .find(|x| x.keys.contains(&command_key.to_lowercase().as_str()))
     }
 
-    pub async fn execute(input: CommandInput, client: Arc<Mutex<Client>>) -> CommandResult {
+    pub async fn execute(input: CommandInput, client: Arc<Mutex<Client>>, user: String) -> CommandResult {
 
         let (key, args) = match input {
             CommandInput::CommandLine(ref x) => {
@@ -88,7 +88,7 @@ impl Command {
 
         match Command::get_command(&key) {
             Some(c) => {
-                (c.handler)(input.into(), args, client).await
+                (c.handler)(input.into(), args, client, user).await
             },
             None => {
                 CommandResult::Failure(format!("Invalid Command {}", key))
@@ -103,11 +103,11 @@ impl Command {
                 description: "Add a new item",
                 http_method: HttpMethod::Put,
                 http_path: "/api/items/add",
-                handler: Arc::new(move |_, value, client| {
+                handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move{
                         let connection = client.lock().await;
-                        perform_add(value, &connection).await
+                        perform_add(value, &connection, user).await
                     }.boxed()
                 })
             },
@@ -116,13 +116,13 @@ impl Command {
                 description: "List open items",
                 http_path: "/api/items",
                 http_method: HttpMethod::Get,
-                handler: Arc::new(move |input, _, client| {
+                handler: Arc::new(move |input, _, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Open, &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::Open, &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Open, &connection, user).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::Open, &connection, user).await
                         }
                     }.boxed()
                 })
@@ -132,13 +132,13 @@ impl Command {
                 description: "List all items",
                 http_path: "/api/items/all",
                 http_method: HttpMethod::Get,
-                handler: Arc::new(move |input, _, client| {
+                handler: Arc::new(move |input, _, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::All, &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::All, &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::All, &connection, user).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::All, &connection, user).await
                         }
                     }.boxed()
                 })
@@ -148,13 +148,13 @@ impl Command {
                 description: "List done items",
                 http_method: HttpMethod::Get,
                 http_path: "/api/items/done",
-                handler: Arc::new(move |input, _, client| {
+                handler: Arc::new(move |input, _, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Done, &connection).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::Done, &connection).await
+                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Done, &connection, user).await,
+                            CommandInput::Http(_, _) => perform_list_http(ListMode::Done, &connection, user).await
                         }
                     }.boxed()
                 })
@@ -164,11 +164,11 @@ impl Command {
                 description: "Remove an item",
                 http_path: "/api/items/remove/{id}",
                 http_method: HttpMethod::Delete,
-                handler: Arc::new(move |_, value, client| {
+                handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
-                        perform_remove(value, &connection).await
+                        perform_remove(value, &connection, user).await
                     }.boxed()
                 })
             },
@@ -177,14 +177,14 @@ impl Command {
                 description: "Exit the application",
                 http_path: "none",
                 http_method: HttpMethod::None,
-                handler: Arc::new(|_, _, _| async move {CommandResult::Exit}.boxed())
+                handler: Arc::new(|_, _, _, _| async move {CommandResult::Exit}.boxed())
             },
             CommandInfo {
                 keys: vec!["h", "help"],
                 description: "Help!",
                 http_path: "none",
                 http_method: HttpMethod::None,
-                handler: Arc::new(|_, _, _| {
+                handler: Arc::new(|_, _, _, _| {
                     async move {
                         println!("Available Commands:");
                         for x in commands::Command::command_info() {
@@ -199,12 +199,12 @@ impl Command {
                 description: "Mark as done",
                 http_path: "/api/items/{id}/done",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client| {
+                handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match value.parse::<i64>() {
-                            Ok(id) => match mark_item(&connection, id, true).await{
+                            Ok(id) => match mark_item(&connection, id, true, user).await{
                                     Ok(_) => CommandResult::Success(format!("Task with ID={} updated successfully.",id)),
                                     Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
                                 },
@@ -218,12 +218,12 @@ impl Command {
                 description: "Mark as undone",
                 http_path: "/api/items/{id}/undone",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client| {
+                handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
                         match value.parse::<i64>() {
-                            Ok(id) => match mark_item(&connection, id, false).await{
+                            Ok(id) => match mark_item(&connection, id, false, user).await{
                                     Ok(_) => CommandResult::Success(format!("Task with ID={} updated successfully.",id)),
                                     Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
                                 },
@@ -237,11 +237,11 @@ impl Command {
                 description: "Mark as Open",
                 http_path: "/api/items/{id}/open",
                 http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client| {
+                handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move {
                         let connection = client.lock().await;
-                        perform_done_toggle(value, false, &connection).await
+                        perform_done_toggle(value, false, &connection, user).await
                     }.boxed()
                 })
             }

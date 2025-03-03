@@ -74,8 +74,8 @@ async fn create_table_if_not_exists(client: &Client) -> Result<u64, Error> {
         .await
 }
 
-pub async fn remove_item(client: &Client, item: String) -> Result<u64, tokio_postgres::Error> {
-    let command = format!("DELETE FROM todo WHERE id = {}", item);
+pub async fn remove_item(client: &Client, item: String, user: String) -> Result<u64, tokio_postgres::Error> {
+    let command = format!("DELETE FROM todo WHERE id = {} AND user_id = {}", item, user);
     client.execute(&command, &[]).await
 }
 
@@ -111,13 +111,14 @@ pub async fn upsert_item(client: &Client, item: Todo) -> Result<u64, String> {
 }
 
 
-pub async fn mark_item(client: &Client, id: i64, done: bool) -> Result<u64, Error> {
+pub async fn mark_item(client: &Client, id: i64, done: bool, user: String) -> Result<u64, Error> {
     client
     .execute(
         "UPDATE todo
         SET completed = $2
-        WHERE id = $1;",
-        &[&id, &done],
+        WHERE id = $1
+        AND user_id = $3;",
+        &[&id, &done, &user],
     )
     .await
 }
@@ -131,12 +132,15 @@ pub async fn init() -> Client {
     client
 }
 
-pub async fn get_data(client: &Client, _: Option<bool>) -> Result<Vec<Todo>, String> {
+pub async fn get_data(client: &Client, _: Option<bool>, user: String) -> Result<Vec<Todo>, String> {
     // Verify by selecting rows from the table
     let result = client
         .query(
-            "SELECT id, user_id, description, added_on, completed FROM todo ORDER BY id ASC",
-            &[],
+            "SELECT id, user_id, description, added_on, completed
+                      FROM todo
+                      WHERE user_id = $1
+                      ORDER BY id ASC",
+            &[&user],
         )
         .await;
 
