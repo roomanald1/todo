@@ -1,4 +1,5 @@
 use tokio_postgres::Client;
+use tracing::instrument;
 use commands::CommandResult::Success;
 use crate::command_handler::commands;
 use crate::store::database;
@@ -6,6 +7,7 @@ use commands::CommandResult::Failure;
 
 use super::commands::CommandResult;
 
+#[instrument]
 pub(crate) async fn perform_done_toggle(item: String, done: bool, client: &Client, user: String) -> commands::CommandResult{
     match item.parse::<i64>() {
         Ok(id) => mark_item(client, id, done, user).await,

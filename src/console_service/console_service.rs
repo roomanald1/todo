@@ -3,9 +3,11 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tokio_postgres::Client;
+use tracing::{instrument};
 use crate::command_handler::commands;
 use crate::command_handler::commands::{CommandInput, CommandResult};
 
+#[instrument]
 async fn handle_command(client: Arc<Mutex<Client>>) {
     loop {
         println!("\r\n> ");
@@ -18,7 +20,7 @@ async fn handle_command(client: Arc<Mutex<Client>>) {
         let client = Arc::clone(&client);
         let should_continue = match commands::Command::execute(CommandInput::CommandLine(input), client, String::from("user_123")).await {
             CommandResult::Success(x) => {
-                print!("{}", x);
+                println!("{}", x);
                 true
             },
             CommandResult::Failure(x) => {

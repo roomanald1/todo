@@ -8,6 +8,7 @@ use crate::command_handler::commands;
 use crate::command_handler::perform_done::perform_done_toggle;
 use crate::store::database::mark_item;
 use futures::{future::BoxFuture, FutureExt};
+use tracing::{instrument};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -61,6 +62,8 @@ pub enum CommandResult{
     Failure(String),
     Exit
 }
+
+#[derive(Debug)]
 pub enum CommandInput {
     CommandLine(String),
     Http(String, Vec<String>)
@@ -68,12 +71,14 @@ pub enum CommandInput {
 
 impl Command {
 
+    #[instrument]
     pub fn get_command(command_key: &str) -> Option<CommandInfo> {
         Self::command_info()
             .into_iter()
             .find(|x| x.keys.contains(&command_key.to_lowercase().as_str()))
     }
 
+    #[instrument]
     pub async fn execute(input: CommandInput, client: Arc<Mutex<Client>>, user: String) -> CommandResult {
 
         let (key, args) = match input {
@@ -96,6 +101,7 @@ impl Command {
         }
     }
 
+    #[instrument]
     pub fn command_info() -> Vec<CommandInfo<'static>> {
         vec![
             CommandInfo {

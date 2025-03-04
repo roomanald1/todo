@@ -3,8 +3,10 @@ use crate::types;
 use crate::command_handler::commands::CommandResult;
 use chrono::Utc;
 use tokio_postgres::Client;
+use tracing::instrument;
 use crate::command_handler::commands;
 
+#[instrument]
 pub(crate) async fn perform_add(description: String, client: &Client, user: String) -> commands::CommandResult {
     let item = types::Todo {
         id: None,
