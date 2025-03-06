@@ -9,6 +9,7 @@ use crate::command_handler::perform_done::perform_done_toggle;
 use crate::store::database::mark_item;
 use futures::{future::BoxFuture, FutureExt};
 use tracing::{instrument};
+use crate::command_handler::perform_update::perform_update;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -104,6 +105,19 @@ impl Command {
     #[instrument]
     pub fn command_info() -> Vec<CommandInfo<'static>> {
         vec![
+            CommandInfo {
+                keys: vec!["update", "u"],
+                description: "Upsert item",
+                http_method: HttpMethod::Put,
+                http_path: "/api/items/upsert",
+                handler: Arc::new(move |_, value, client, user| {
+                    let client = Arc::clone(&client);
+                    async move{
+                        let connection = client.lock().await;
+                        perform_update(value, &connection, user).await
+                    }.boxed()
+                })
+            },
             CommandInfo {
                 keys: vec!["a", "add"],
                 description: "Add a new item",

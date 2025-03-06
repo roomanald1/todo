@@ -1,0 +1,33 @@
+[2m2025-03-06T13:07:42.235260Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:07:42.235303Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:07:42.235330Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:07:42.396135Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:09:32.996714Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:09:32.996759Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:09:32.996786Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:09:33.240564Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:10:30.820098Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:10:30.820143Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:10:30.820171Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:10:31.339984Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:10:38.707095Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:10:38.707139Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:10:38.707166Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:10:39.441756Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:11:10.146443Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:11:10.146489Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:11:10.146516Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:11:10.530098Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:12:02.491249Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:12:02.491293Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:12:02.491320Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:12:02.718466Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:12:12.145048Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:12:12.145093Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =console
+[2m2025-03-06T13:12:12.145119Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:12:12.458096Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:27:32.362188Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Starting Application
+[2m2025-03-06T13:27:32.362233Z[0m [32m INFO[0m [2mtodo[0m[2m:[0m Mode =web
+[2m2025-03-06T13:27:32.362260Z[0m [32m INFO[0m [1minit[0m[2m:[0m [2mtodo::store::database[0m[2m:[0m Connecting to Postgres DB
+[2m2025-03-06T13:27:32.505949Z[0m [32m INFO[0m [2mtokio_postgres::connection[0m[2m:[0m NOTICE: relation "todo" already exists, skipping    
+[2m2025-03-06T13:27:32.506508Z[0m [32m INFO[0m [1mstart_webservice[0m[1m{[0m[3mclient[0m[2m=[0mMutex { data: Client }[1m}[0m[2m:[0m [2mtodo::web_service::web_service[0m[2m:[0m Listening on 0.0.0.0:3000

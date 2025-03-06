@@ -5,8 +5,10 @@ pub(crate) struct Todo {
     pub description: String,
     pub added_on: String,
     pub completed: bool,
-    pub id: Option<u64>,
-    pub user_id: String
+    pub id: Option<i64>,
+    pub user_id: String,
+    pub detail: Option<String>,
+    pub due: Option<String>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

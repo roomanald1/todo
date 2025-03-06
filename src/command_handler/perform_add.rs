@@ -13,7 +13,9 @@ pub(crate) async fn perform_add(description: String, client: &Client, user: Stri
         user_id: user,
         description,
         added_on: Utc::now().to_string(),
-        completed: false
+        completed: false,
+        due: None,
+        detail: None
     };
 
 

@@ -56,7 +56,9 @@ async fn create_table_if_not_exists(client: &Client) -> Result<u64, Error> {
             user_id TEXT NOT NULL,
             description TEXT NOT NULL,
             added_on TEXT NOT NULL,
-            completed BOOLEAN NOT NULL
+            completed BOOLEAN NOT NULL,
+            detail TEXT,
+            due TEXT
         )",
             &[],
         )
@@ -70,31 +72,48 @@ pub async fn remove_item(client: &Client, item: String, user: String) -> Result<
 }
 
 #[instrument]
-pub async fn upsert_item(client: &Client, item: Todo) -> Result<u64, String> {
-    let row = client
-        .query_one(
-            "INSERT INTO todo (user_id, description, added_on, completed)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (id) DO UPDATE
-            SET description = EXCLUDED.description,
-                added_on = EXCLUDED.added_on,
-                completed = EXCLUDED.completed,
-                user_id = EXCLUDED.user_id
-            RETURNING id",
-            &[
-                &item.user_id,
-                &item.description,
-                &item.added_on,
-                &item.completed,
-            ],
-        )
-        .await.map_err(|e| e.to_string())?;
+pub async fn upsert_item(client: &Client, item: Todo) -> Result<i64, String> {
+    let row = if let Some(id) = item.id {
+        // If id is provided, override the generated value
+        client
+            .execute(
+                "UPDATE todo
+                    SET completed = $2, description = $4, due = $5, detail = $6
+                    WHERE id = $1
+                    AND user_id = $3;",
+                &[
+                    &id,
+                    &item.completed,
+                    &item.user_id,
+                    &item.description,
+                    &item.due,
+                    &item.detail,
+                ],
+            )
+            .await
+            .map_err(|e| e.to_string())?
+    } else {
+        // If id is None, let PostgreSQL generate it
+        client
+            .execute(
+                "INSERT INTO todo (user_id, description, added_on, completed, due, detail)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+                 RETURNING id",
+                &[
+                    &item.user_id,
+                    &item.description,
+                    &item.added_on,
+                    &item.completed,
+                    &item.due,
+                    &item.detail,
+                ],
+            )
+            .await
+            .map_err(|e| e.to_string())?
+    };
 
-
-    match u64::try_from(row.get::<_, i64>(0)) {
-        Ok(id) => Ok(id),
-        Err(_) => Err("Failed to convert row ID to u64".to_string()),
-    }
+    let id: i64 = i64::try_from(row).map_err(|e| e.to_string())?;
+    Ok(id)
 }
 
 #[instrument]
@@ -114,6 +133,7 @@ pub async fn mark_item(client: &Client, id: i64, done: bool, user: String) -> Re
 pub async fn init() -> Result<Client, String> {
     info!("Connecting to Postgres DB");
     let client = connect().await?;
+    //let _ = drop_table(&client).await.map_err(|err| err.to_string());
     let _ = create_table_if_not_exists(&client).await.map_err(|e| {format!("Failed to create table {}", e)});
     Ok(client)
 }
@@ -123,7 +143,7 @@ pub async fn get_data(client: &Client, _: Option<bool>, user: String) -> Result<
     // Verify by selecting rows from the table
     let rows = client
         .query(
-            "SELECT id, user_id, description, added_on, completed
+            "SELECT id, user_id, description, added_on, completed, due, detail
                       FROM todo
                       WHERE user_id = $1
                       ORDER BY id ASC",
@@ -134,17 +154,14 @@ pub async fn get_data(client: &Client, _: Option<bool>, user: String) -> Result<
     Ok(rows
         .iter()
         .map(|row| {
-            let raw_id: i64 = row.get(0);
-            let id = match u64::try_from(raw_id) {
-                Ok(id) => Some(id),
-                Err(_) => None,
-            };
             Todo {
-                id,
+                id: row.get(0),
                 user_id : row.get(1),
                 description: row.get(2),
                 added_on: row.get(3),
                 completed: row.get(4),
+                due: row.get(5),
+                detail: row.get(6)
             }
         })
         .collect())
