@@ -1,15 +1,10 @@
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio_postgres::Client;
-use crate::command_handler::perform_add::perform_add;
-use crate::command_handler::perform_list::{perform_list_console, perform_list_http, ListMode};
-use crate::command_handler::perform_remove::perform_remove;
-use crate::command_handler::commands;
-use crate::command_handler::perform_done::perform_done_toggle;
-use crate::store::database::mark_item;
+use crate::command_handler::perform_list::{perform_get};
 use futures::{future::BoxFuture, FutureExt};
 use tracing::{instrument};
-use crate::command_handler::perform_update::perform_update;
+use crate::command_handler::perform_update::{perform_update};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -106,165 +101,37 @@ impl Command {
     pub fn command_info() -> Vec<CommandInfo<'static>> {
         vec![
             CommandInfo {
-                keys: vec!["update", "u"],
-                description: "Upsert item",
+                keys: vec!["get"],
+                description: "Get all items for a user",
+                http_path: "/api/get",
+                http_method: HttpMethod::Get,
+                handler: Arc::new(move |_input, _, client, user| {
+                    let client = Arc::clone(&client);
+                    async move {
+                        let connection = client.lock().await;
+                        match perform_get(&connection, user).await {
+                            Ok(v) => CommandResult::Success(v),
+                            Err(e) => CommandResult::Failure(e)
+                        }
+                    }.boxed()
+                })
+            },
+            CommandInfo {
+                keys: vec!["set"],
+                description: "Set all items for a user",
                 http_method: HttpMethod::Put,
-                http_path: "/api/items/upsert",
+                http_path: "/api/set",
                 handler: Arc::new(move |_, value, client, user| {
                     let client = Arc::clone(&client);
                     async move{
                         let connection = client.lock().await;
-                        perform_update(value, &connection, user).await
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["a", "add"],
-                description: "Add a new item",
-                http_method: HttpMethod::Put,
-                http_path: "/api/items/add",
-                handler: Arc::new(move |_, value, client, user| {
-                    let client = Arc::clone(&client);
-                    async move{
-                        let connection = client.lock().await;
-                        perform_add(value, &connection, user).await
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["l", "list", "ls"],
-                description: "List open items",
-                http_path: "/api/items",
-                http_method: HttpMethod::Get,
-                handler: Arc::new(move |input, _, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Open, &connection, user).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::Open, &connection, user).await
+                        match perform_update(&connection, user, value).await {
+                            Ok(v) => CommandResult::Success(v),
+                            Err(e) => CommandResult::Failure(e)
                         }
                     }.boxed()
                 })
             },
-            CommandInfo {
-                keys: vec!["l:all", "list:all", "ls:all"],
-                description: "List all items",
-                http_path: "/api/items/all",
-                http_method: HttpMethod::Get,
-                handler: Arc::new(move |input, _, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::All, &connection, user).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::All, &connection, user).await
-                        }
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["l:done", "list:done", "ls:done"],
-                description: "List done items",
-                http_method: HttpMethod::Get,
-                http_path: "/api/items/done",
-                handler: Arc::new(move |input, _, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        match &*input {
-                            CommandInput::CommandLine(_) => perform_list_console(ListMode::Done, &connection, user).await,
-                            CommandInput::Http(_, _) => perform_list_http(ListMode::Done, &connection, user).await
-                        }
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["r", "remove"],
-                description: "Remove an item",
-                http_path: "/api/items/remove/{id}",
-                http_method: HttpMethod::Delete,
-                handler: Arc::new(move |_, value, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        perform_remove(value, &connection, user).await
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["x", "exit", "q", "quit"],
-                description: "Exit the application",
-                http_path: "none",
-                http_method: HttpMethod::None,
-                handler: Arc::new(|_, _, _, _| async move {CommandResult::Exit}.boxed())
-            },
-            CommandInfo {
-                keys: vec!["h", "help"],
-                description: "Help!",
-                http_path: "none",
-                http_method: HttpMethod::None,
-                handler: Arc::new(|_, _, _, _| {
-                    async move {
-                        println!("Available Commands:");
-                        for x in commands::Command::command_info() {
-                            println!("-> \t[{}]\t\t\t{}", &x.keys.join(","),  String::from(x.description));
-                        }
-                        CommandResult::Success(String::from("Available Commands:"))
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["done", "d"],
-                description: "Mark as done",
-                http_path: "/api/items/{id}/done",
-                http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        match value.parse::<i64>() {
-                            Ok(id) => match mark_item(&connection, id, true, user).await{
-                                    Ok(_) => CommandResult::Success(format!("Task with ID={} updated successfully.",id)),
-                                    Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
-                                },
-                                Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
-                        }
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["undone", "u"],
-                description: "Mark as undone",
-                http_path: "/api/items/{id}/undone",
-                http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        match value.parse::<i64>() {
-                            Ok(id) => match mark_item(&connection, id, false, user).await{
-                                    Ok(_) => CommandResult::Success(format!("Task with ID={} updated successfully.",id)),
-                                    Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
-                                },
-                                Err(_) => CommandResult::Failure("Invalid item ID".to_string()),
-                        }
-                    }.boxed()
-                })
-            },
-            CommandInfo {
-                keys: vec!["open", "o"],
-                description: "Mark as Open",
-                http_path: "/api/items/{id}/open",
-                http_method: HttpMethod::Put,
-                handler: Arc::new(move |_, value, client, user| {
-                    let client = Arc::clone(&client);
-                    async move {
-                        let connection = client.lock().await;
-                        perform_done_toggle(value, false, &connection, user).await
-                    }.boxed()
-                })
-            }
         ]
         }
 
