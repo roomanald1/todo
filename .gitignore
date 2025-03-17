@@ -4,3 +4,4 @@ target/.rustc_info.json
 /.idea
 /.qodo
 todo.log.*
+.qodo

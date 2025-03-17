@@ -64,7 +64,7 @@ pub async fn start_webservice(client: Arc<Mutex<Client>>) -> Result<(), String>{
 
     app = app.layer(CorsLayer::permissive());
 
-    let address = "0.0.0.0:3000";
+    let address = "0.0.0.0:8000";
     let listener = tokio::net::TcpListener::bind(address).await.map_err(|e| {format!("Failed to bind to listener: {}", e)})?;
 
     info!("Listening on {}", address);

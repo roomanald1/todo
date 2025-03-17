@@ -5,12 +5,22 @@ use postgres_native_tls::MakeTlsConnector;
 use tokio_postgres::{Client, Error};
 use tracing::{info, instrument};
 
+
+fn load_certs() -> Result<Vec<u8>, String> {
+    match fs::read("/usr/local/share/ca-certificates/ca.pem"){
+        Ok(certs) => Ok(certs),
+        Err(_) => match fs::read("./ca.pem"){
+            Ok(certs) => Ok(certs),
+            Err(error) => Err(format!("{}", error)),
+        },
+    }
+}
+
 #[instrument]
 async fn connect() -> Result<Client, String> {
     let db_url = "postgres://avnadmin:AVNS_GLDm0Kvw_n4n1jR9QVF@pg-321f6976-ronnie-9662.g.aivencloud.com:27821/defaultdb?sslmode=require";
 
-    let cert = fs::read("./src/ca.pem")
-        .map_err(|e| { format!("Failed to read CA certificate: {}", e) })?;
+    let cert = load_certs()?;
 
     let cert = Certificate::from_pem(&cert)
         .map_err(|e| { format!("Failed to parse CA certificate: {}", e) })?;
