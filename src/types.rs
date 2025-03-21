@@ -12,3 +12,16 @@ pub(crate) struct Todo {
     pub detail: Option<String>,
     pub due: Option<String>
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum UpdateAction {
+    Add,
+    Remove,
+    Update
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub(crate) struct TodoUpdate {
+    pub action : UpdateAction,
+    pub id : i64,
+    pub data: Option<Todo>
+}

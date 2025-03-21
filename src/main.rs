@@ -4,9 +4,7 @@ mod types;
 mod web_service;
 mod command_handler;
 mod store;
-use tracing_subscriber;
 use tracing::{info, span, Level};
-use tracing_appender;
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
