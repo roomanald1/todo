@@ -3,11 +3,11 @@ use tokio::sync::Mutex;
 use axum::{Json, Router};
 use axum::http::HeaderMap;
 use axum::routing::{get, put};
-use tokio_postgres::Client;
 use tower_http::cors::CorsLayer;
 use tracing::{info, instrument};
 use crate::command_handler::perform_list::{perform_get};
 use crate::command_handler::perform_update::{perform_update};
+use crate::store::database::Database;
 use crate::types::Todo;
 
 #[instrument]
@@ -21,24 +21,23 @@ fn get_user(headers: HeaderMap) -> Result<String, String>{
 }
 
 
-#[instrument]
-pub async fn start_webservice(client: Arc<Mutex<Client>>) -> Result<(), String>{
+pub async fn start_webservice(database: Arc<Mutex<Database>>) -> Result<(), String>{
     let app = Router::new()
         .route("/api/get", get({
-            let db = Arc::clone(&client);
+            let db= Arc::clone(&database);
             move |headers:HeaderMap| async move {
                 let user = get_user(headers)?;
-                let connection = db.lock().await;
-                let items = perform_get(&connection, user).await.map_err(|e|e.to_string())?;
+                let mut connection = db.lock().await;
+                let items = perform_get(&mut connection, user).await.map_err(|e|e.to_string())?;
                 return Ok::<Json<Vec<Todo>>, String>(Json(items));
             }
          }))
         .route("/api/update", put({
-            let db = Arc::clone(&client);
+            let db = Arc::clone(&database);
             move |headers:HeaderMap, Json(items)| async move {
                 let user = get_user(headers)?;
-                let connection = db.lock().await;
-                let result = perform_update(&connection, user, items).await.map_err(|e|e.to_string())?;
+                let mut connection = db.lock().await;
+                let result = perform_update(&mut connection, user, items).await.map_err(|e|e.to_string())?;
                 return Ok::<Json<Vec<Todo>>, String>(Json(result));
             }
         }))
