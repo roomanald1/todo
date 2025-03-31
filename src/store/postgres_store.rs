@@ -1,9 +1,11 @@
 use std::fs;
 use std::sync::Arc;
+use async_trait::async_trait;
 use native_tls::{Certificate, TlsConnector};
 use postgres_native_tls::MakeTlsConnector;
 use tokio_postgres::{Client, Error};
 use tracing::info;
+use crate::store::database::DatabaseBackend;
 use crate::types::Todo;
 
 #[derive(Clone)]
@@ -11,9 +13,9 @@ pub struct PostgresStore {
     client: Option<Arc<Client>>
 }
 
-impl PostgresStore {
-
-    pub async fn init(&mut self) -> Result<(), String> {
+#[async_trait]
+impl DatabaseBackend for PostgresStore {
+    async fn init(&mut self) -> Result<(), String> {
         info!("Connecting to Postgres DB");
         self.connect().await?;
         let client = self.client.as_ref().ok_or("Client not initialised".to_string())?;
@@ -22,16 +24,19 @@ impl PostgresStore {
         Ok(())
     }
 
-    pub async fn get(&self, user: String) -> Result<Vec<Todo>, String> {
+    async fn get(&mut self, user: String) -> Result<Vec<Todo>, String> {
         let client = self.client.as_ref().ok_or(format!("Client not initialised"))?;
         PostgresStore::get_data(client, user).await
     }
 
-    pub async fn set(&self, user: String, items: Vec<Todo>) -> Result<(), String>{
+    async fn set(&mut self, user: String, items: Vec<Todo>) -> Result<(), String> {
         let client = self.client.as_ref().ok_or(format!("Client not initialised"))?;
         let _ = PostgresStore::upsert(client, user, items).await?;
         Ok(())
     }
+}
+
+impl PostgresStore {
 
     pub fn new() -> PostgresStore {
         PostgresStore { client: None}

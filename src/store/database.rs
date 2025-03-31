@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use crate::store::postgres_store::PostgresStore;
 use crate::store::redis_store::RedisStore;
 use crate::types::Todo;
@@ -6,6 +7,13 @@ use crate::types::Todo;
 pub enum Database {
     Postgres(PostgresStore),
     Redis(RedisStore)
+}
+
+#[async_trait]
+pub trait DatabaseBackend {
+    async fn init(&mut self) -> Result<(), String>;
+    async fn get(&mut self, user: String) -> Result<Vec<Todo>, String>;
+    async fn set(&mut self, user: String, items: Vec<Todo>) -> Result<(), String>;
 }
 
 impl Database {
