@@ -61,3 +61,9 @@ impl Database {
         }
     }
 }
+
+pub async fn sync(mut from: Database, mut to: Database) -> Result<(), String> {
+    let items = from.get("ronnie.day1@gmail.com".to_string()).await?;
+    to.set("ronnie.day1@gmail.com".to_string(), items).await?;
+    Ok(())
+}

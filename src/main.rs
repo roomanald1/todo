@@ -5,6 +5,7 @@ mod web_service;
 mod command_handler;
 mod store;
 use tracing::{info, span, Level};
+use crate::store::database;
 use crate::store::database::Database;
 use crate::store::postgres_store::PostgresStore;
 use crate::store::redis_store::RedisStore;
@@ -28,15 +29,8 @@ async fn main() -> Result<(), String> {
     //Uncomment this to sync redis and postgres
     //let mut backup = Database::Postgres(PostgresStore::new());
     //backup.init().await?;
-    //sync(backup, db.clone()).await?;
+    //database::sync(backup, db.clone()).await?;
 
     let result = web_service::web_service::start_webservice(Arc::new(Mutex::new(db))).await;
     result
-}
-
-
-async fn sync(mut from: Database, mut to: Database) -> Result<(), String> {
-    let items = from.get("ronnie.day1@gmail.com".to_string()).await?;
-    to.set("ronnie.day1@gmail.com".to_string(), items).await?;
-    Ok(())
 }
