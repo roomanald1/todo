@@ -5,3 +5,4 @@ target/.rustc_info.json
 /.qodo
 todo.log.*
 .qodo
+/mutants.out
